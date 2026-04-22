@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema PDV - Terminal de Vendas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        /* Menu Principal */
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .menu-btn {
+            background: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .menu-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .menu-btn.danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        /* Conteúdo Principal */
+        .content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Formulários */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        /* Tabelas */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Carrinho */
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .cart-total {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Alertas */
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Sistema PDV - Terminal de Vendas</h1>
+            <p>Cadastro de produtos | Controle de estoque | Vendas | Relatórios</p>
+        </div>
+
+        <div class="menu">
+            <button class="menu-btn" onclick="showSection('cadastro')">📦 Cadastrar Produto</button>
+            <button class="menu-btn" onclick="showSection('produtos')">📋 Listar Produtos</button>
+            <button class="menu-btn" onclick="showSection('estoque')">📊 Atualizar Estoque</button>
+            <button class="menu-btn primary" onclick="showSection('venda')">💰 Realizar Venda</button>
+            <button class="menu-btn" onclick="showSection('relatorios')">📈 Relatórios</button>
+        </div>
+
+        <div class="content">
+            <div id="alert" class="alert"></div>
+
+            <!-- Seção de Cadastro -->
+            <div id="cadastro" class="section">
+                <h2>📦 Cadastrar Produto</h2>
+                <form id="produtoForm">
+                    <div class="form-group">
+                        <label>Nome do Produto:</label>
+                        <input type="text" id="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Código de Barras:</label>
+                        <input type="text" id="codigo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Preço (R$):</label>
+                        <input type="number" id="preco" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantidade em Estoque:</label>
+                        <input type="number" id="estoque" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Validade:</label>
+                        <input type="date" id="validade">
+                    </div>
+                    <button type="submit">Cadastrar Produto</button>
+                </form>
+            </div>
+
+            <!-- Seção de Listagem -->
+            <div id="produtos" class="section">
+                <h2>📋 Lista de Produtos</h2>
+                <div class="table-container">
+                    <table id="tabelaProdutos">
+                        <thead>
+                            <tr><th>ID</th><th>Nome</th><th>Código</th><th>Preço</th><th>Estoque</th><th>Validade</th></tr>
+                        </thead>
+                        <tbody id="listaProdutos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção de Estoque -->
+            <div id="estoque" class="section">
+                <h2>📊 Atualizar Estoque</h2>
+                <div class="form-group">
+                    <label>Código de Barras:</label>
+                    <input type="text" id="buscaEstoque" placeholder="Digite o código do produto">
+                    <button onclick="buscarProdutoEstoque()" style="margin-top: 10px;">Buscar Produto</button>
+                </div>
+                <div id="infoProduto"></div>
+            </div>
+
+            <!-- Seção de Venda -->
+            <div id="venda" class="section">
+                <h2>💰 Realizar Venda</h2>
+                <div class="grid-2">
+                    <div>
+                        <div class="form-group">
+                            <label>Código de Barras (ou leitura QR):</label>
+                            <input type="text" id="codigoVenda" placeholder="Digite ou cole o código">
+                            <button onclick="adicionarAoCarrinho()" style="margin-top: 10px;">Adicionar ao Carrinho</button>
+                        </div>
+                        <div id="carrinho">
+                            <h3>Carrinho de Compras</h3>
+                            <div id="itensCarrinho"></div>
+                            <div id="totalCarrinho" class="cart-total"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label>Forma de Pagamento:</label>
+                            <select id="pagamento">
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="debito">Débito</option>
+                                <option value="credito">Crédito</option>
+                                <option value="pix">PIX</option>
+                            </select>
+                        </div>
+                        <div id="pagamentoDinheiro" style="display: none;">
+                            <div class="form-group">
+                                <label>Valor Recebido (R$):</label>
+                                <input type="number" id="valorRecebido" step="0.01">
+                            </div>
+                        </div>
+                        <button onclick="finalizarVenda()" class="menu-btn primary" style="width: 100%; margin-top: 20px;">Finalizar Venda</button>
+                        <button onclick="limparCarrinho()" style="background: #ff4757; margin-top: 10px;">Limpar Carrinho</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Relatórios -->
+            <div id="relatorios" class="section">
+                <h2>📈 Relatórios</h2>
+                <div class="form-group">
+                    <select id="tipoRelatorio" onchange="carregarRelatorio()">
+                        <option value="vendas">Todas as Vendas</option>
+                        <option value="produtosMaisVendidos">Produtos Mais Vendidos</option>
+                        <option value="estoqueBaixo">Produtos com Estoque Baixo</option>
+                    </select>
+                </div>
+                <div id="relatorioConteudo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banco de dados local (simulado com localStorage)
+        let produtos = JSON.parse(localStorage.getItem('produtos') || '[]');
+        let vendas = JSON.parse(localStorage.getItem('vendas') || '[]');
+        let itensVenda = JSON.parse(localStorage.getItem('itensVenda') || '[]');
+        let carrinho = [];
+
+        // Inicializar dados de exemplo
+        function initDadosExemplo() {
+            if (produtos.length === 0) {
+                produtos = [
+                    { id: 1, nome: "Arroz 5kg", codigo_barras: "789100001", preco: 25.90, estoque: 50, validade: "2025-12-31" },
+                    { id: 2, nome: "Feijão 1kg", codigo_barras: "789100002", preco: 8.50, estoque: 30, validade: "2025-10-15" },
+                    { id: 3, nome: "Açúcar 1kg", codigo_barras: "789100003", preco: 4.75, estoque: 40, validade: "2026-01-20" },
+                    { id: 4, nome: "Café 500g", codigo_barras: "789100004", preco: 12.90, estoque: 25, validade: "2025-09-10" }
+                ];
+                salvarProdutos();
+            }
+        }
+
+        function salvarProdutos() {
+            localStorage.setItem('produtos', JSON.stringify(produtos));
+        }
+
+        function salvarVendas() {
+            localStorage.setItem('vendas', JSON.stringify(vendas));
+            localStorage.setItem('itensVenda', JSON.stringify(itensVenda));
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert ${type} show`;
+            alert.textContent = message;
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            if (sectionId === 'produtos') {
+                carregarListaProdutos();
+            } else if (sectionId === 'relatorios') {
+                carregarRelatorio();
+            }
+        }
+
+        // Cadastro de produto
+        document.getElementById('produtoForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const novoProduto = {
+                id: produtos.length + 1,
+                nome: document.getElementById('nome').value,
+                codigo_barras: document.getElementById('codigo').value,
+                preco: parseFloat(document.getElementById('preco').value),
+                estoque: parseInt(document.getElementById('estoque').value),
+                validade: document.getElementById('validade').value
+            };
+            
+            if (produtos.find(p => p.codigo_barras === novoProduto.codigo_barras)) {
+                showAlert('Código de barras já existe!', 'error');
+                return;
+            }
+            
+            produtos.push(novoProduto);
+            salvarProdutos();
+            showAlert('Produto cadastrado com sucesso!', 'success');
+            e.target.reset();
+        });
+
+        function carregarListaProdutos() {
+            const tbody = document.getElementById('listaProdutos');
+            tbody.innerHTML = '';
+            produtos.forEach(p => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = p.id;
+                row.insertCell(1).textContent = p.nome;
+                row.insertCell(2).textContent = p.codigo_barras;
+                row.insertCell(3).textContent = `R$ ${p.preco.toFixed(2)}`;
+                row.insertCell(4).textContent = p.estoque;
+                row.insertCell(5).textContent = p.validade || '-';
+            });
+        }
+
+        function buscarProdutoEstoque() {
+            const codigo = document.getElementById('buscaEstoque').value;
+            const produto = produtos.find(p => p.codigo_barras === codigo);
+            const div = document.getElementById('infoProduto');
+            
+            if (!produto) {
+                div.innerHTML = '<div class="alert error show">Produto não encontrado!</div>';
+                return;
+            }
+            
+            div.innerHTML = `
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <h3>${produto.nome}</h3>
+                    <p>Código: ${produto.codigo_barras}</p>
+                    <p>Preço: R$ ${produto.preco.toFixed(2)}</p>
+                    <p>Estoque atual: ${produto.estoque}</p>
+                    <div class="form-group">
+                        <label>Nova quantidade:</label>
+                        <input type="number" id="novaQuantidade" value="${produto.estoque}">
+                        <button onclick="atualizarEstoque('${produto.codigo_barras}')" style="margin-top: 10px;">Atualizar</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function atualizarEstoque(codigo) {
+            const novaQuantidade = parseInt(document.getElementById('novaQuantidade').value);
+            const produto = produtos.find(p => p.codigo_barras === codigo);
+            if (produto) {
+                produto.estoque = novaQuantidade;
+                salvarProdutos();
+                showAlert('Estoque atualizado com sucesso!', 'success');
+                document.getElementById('infoProduto').innerHTML = '';
+                document.getElementById('buscaEstoque').value = '';
+            }
+        }
+
+        // Vendas
+        function adicionarAoCarrinho() {
+            const codigo = document.getElementById('codigoVenda').value;
+            const produto = produtos.find(p => p.codigo_barras === codigo);
+            
+            if (!produto) {
+                showAlert('Produto não encontrado!', 'error');
+                return;
+            }
+            
+            if (produto.estoque <= 0) {
+                showAlert('Produto sem estoque!', 'error');
+                return;
+            }
+            
+            const quantidade = prompt(`Quantidade de ${produto.nome}:`, '1');
+            if (!quantidade) return;
+            
+            const qtd = parseInt(quantidade);
+            if (qtd > produto.estoque) {
+                showAlert(`Estoque insuficiente! Disponível: ${produto.estoque}`, 'error');
+                return;
+            }
+            
+            const itemCarrinho = carrinho.find(i => i.id === produto.id);
+            if (itemCarrinho) {
+                itemCarrinho.quantidade += qtd;
+            } else {
+                carrinho.push({
+                    id: produto.id,
+                    nome: produto.nome,
+                    preco: produto.preco,
+                    quantidade: qtd
+                });
+            }
+            
+            document.getElementById('codigoVenda').value = '';
+            atualizarCarrinho();
+            showAlert(`${qtd}x ${produto.nome} adicionado ao carrinho!`, 'success');
+        }
+        
+        function atualizarCarrinho() {
+            const container = document.getElementById('itensCarrinho');
+            const totalContainer = document.getElementById('totalCarrinho');
+            
+            if (carrinho.length === 0) {
+                container.innerHTML = '<p>Carrinho vazio</p>';
+                totalContainer.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = '';
+            let total = 0;
+            
+            carrinho.forEach((item, index) => {
+                const subtotal = item.preco * item.quantidade;
+                total += subtotal;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div>
+                            <strong>${item.nome}</strong><br>
+                            ${item.quantidade}x R$ ${item.preco.toFixed(2)}
+                        </div>
+                        <div>
+                            R$ ${subtotal.toFixed(2)}
+                            <button onclick="removerDoCarrinho(${index})" style="margin-left: 10px; background: #ff4757;">❌</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            totalContainer.innerHTML = `<strong>TOTAL: R$ ${total.toFixed(2)}</strong>`;
+        }
+        
+        function removerDoCarrinho(index) {
+            carrinho.splice(index, 1);
+            atualizarCarrinho();
+        }
+        
+        function limparCarrinho() {
+            carrinho = [];
+            atualizarCarrinho();
+            showAlert('Carrinho limpo!', 'success');
+        }
+        
+        document.getElementById('pagamento').addEventListener('change', (e) => {
+            const divPagamento = document.getElementById('pagamentoDinheiro');
+            divPagamento.style.display = e.target.value === 'dinheiro' ? 'block' : 'none';
+        });
+        
+        function finalizarVenda() {
+            if (carrinho.length === 0) {
+                showAlert('Carrinho vazio!', 'error');
+                return;
+            }
+            
+            const total = carrinho.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+            const pagamento = document.getElementById('pagamento').value;
+            
+            if (pagamento === 'dinheiro') {
+                const recebido = parseFloat(document.getElementById('valorRecebido').value);
+                if (recebido < total) {
+                    showAlert('Valor insuficiente!', 'error');
+                    return;
+                }
+                const troco = recebido - total;
+                if (troco > 0) {
+                    showAlert(`Troco: R$ ${troco.toFixed(2)}`, 'success');
+                }
+            }
+            
+            // Registrar venda
+            const venda = {
+                id: vendas.length + 1,
+                data: new Date().toISOString(),
+                total: total,
+                pagamento: pagamento
+            };
+            vendas.push(venda);
+            
+            // Registrar itens da venda e atualizar estoque
+            carrinho.forEach(item => {
+                itensVenda.push({
+                    id: itensVenda.length + 1,
+                    venda_id: venda.id,
+                    produto_id: item.id,
+                    quantidade: item.quantidade,
+                    preco: item.preco
+                });
+                
+                const produto = produtos.find(p => p.id === item.id);
+                if (produto) {
+                    produto.estoque -= item.quantidade;
+                }
+            });
+            
+            salvarProdutos();
+            salvarVendas();
+            
+            showAlert(`Venda concluída com sucesso! Nº ${venda.id} - Total: R$ ${total.toFixed(2)}`, 'success');
+            limparCarrinho();
+        }
+        
+        // Relatórios
+        function carregarRelatorio() {
+            const tipo = document.getElementById('tipoRelatorio').value;
+            const container = document.getElementById('relatorioConteudo');
+            
+            if (tipo === 'vendas') {
+                if (vendas.length === 0) {
+                    container.innerHTML = '<p>Nenhuma venda realizada ainda.</p>';
+                    return;
+                }
+                
+                let html = '<div class="table-container"><table><thead><tr><th>ID</th><th>Data</th><th>Total</th><th>Pagamento</th></tr></thead><tbody>';
+                vendas.forEach(v => {
+                    html += `<tr><td>${v.id}</td><td>${new Date(v.data).toLocaleString()}</td><td>R$ ${v.total.toFixed(2)}</td><td>${v.pagamento}</td></tr>`;
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+                
+            } else if (tipo === 'produtosMaisVendidos') {
+                const vendasPorProduto = {};
+                itensVenda.forEach(item => {
+                    if (!vendasPorProduto[item.produto_id]) {
+                        vendasPorProduto[item.produto_id] = 0;
+                    }
+                    vendasPorProduto[item.produto_id] += item.quantidade;
+                });
+                
+                const ranking = Object.entries(vendasPorProduto)
+                    .map(([id, qtd]) => {
+                        const produto = produtos.find(p => p.id == id);
+                        return { nome: produto?.nome || 'Produto removido', quantidade: qtd };
+                    })
+                    .sort((a, b) => b.quantidade - a.quantidade);
+                
+                if (ranking.length === 0) {
+                    container.innerHTML = '<p>Nenhum produto vendido ainda.</p>';
+                    return;
+                }
+                
+                let html = '<div class="table-container"><table><thead><tr><th>Produto</th><th>Quantidade Vendida</th></tr></thead><tbody>';
+                ranking.forEach(p => {
+                    html += `<tr><td>${p.nome}</td><td>${p.quantidade}</td></tr>`;
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+                
+            } else if (tipo === 'estoqueBaixo') {
+                const baixoEstoque = produtos.filter(p => p.estoque <= 5);
+                
+                if (baixoEstoque.length === 0) {
+                    container.innerHTML = '<p>Nenhum produto com estoque baixo.</p>';
+                    return;
+                }
+                
+                let html = '<div class="table-container"><table><thead><tr><th>Nome</th><th>Código</th><th>Estoque</th><th>Validade</th></tr></thead><tbody>';
+                baixoEstoque.forEach(p => {
+                    html += `<tr><td>${p.nome}</td><td>${p.codigo_barras}</td><td style="color: red; font-weight: bold;">${p.estoque}</td><td>${p.validade || '-'}</td></tr>`;
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            }
+        }
+        
+        // Inicialização
+        initDadosExemplo();
+        showSection('cadastro');
+    </script>
+</body>
+</html>
